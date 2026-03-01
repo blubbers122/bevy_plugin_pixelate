@@ -6,7 +6,6 @@ use bevy::{
 pub mod colors;
 pub mod pixelating_plugin;
 pub mod rotators;
-pub mod screenshots;
 
 #[derive(Asset, AsBindGroup, Reflect, Debug, Clone)]
 pub struct PixelatedExtension {
