@@ -34,7 +34,6 @@ fn main() {
                 rotate,
             ),
         )
-        .insert_resource(Msaa::Off)
         .run();
 }
 
@@ -80,75 +79,58 @@ fn setup(
 
     for (i, shape) in shapes.into_iter().enumerate() {
         commands.spawn((
-            MaterialMeshBundle {
-                mesh: shape,
-                material: debug_material.clone(),
-                transform: Transform::from_xyz(
-                    -X_EXTENT / 2. + i as f32 / (num_shapes - 1) as f32 * X_EXTENT,
-                    2.0,
-                    0.0,
-                )
-                .with_rotation(Quat::from_rotation_x(-PI / 4.)),
-                ..default()
-            },
+            Mesh3d::from(shape),
+            MeshMaterial3d::from(debug_material.clone()),
+            Transform::from_xyz(
+                -X_EXTENT / 2. + i as f32 / (num_shapes - 1) as f32 * X_EXTENT,
+                2.0,
+                0.0,
+            )
+            .with_rotation(Quat::from_rotation_x(-PI / 4.)),
             Shape,
             pixelated_pass_layer.0.clone(),
         ));
     }
 
     commands.spawn((
-        PointLightBundle {
-            point_light: PointLight {
-                intensity: 4500000.0,
-                range: 1000.,
-                shadows_enabled: true,
-                ..default()
-            },
-            transform: Transform::from_xyz(8.0, 16.0, 8.0),
+        PointLight {
+            intensity: 4500000.0,
+            range: 1000.,
+            shadows_enabled: true,
             ..default()
         },
+        Transform::from_xyz(8.0, 16.0, 8.0),
         RenderLayers::from_layers(&[0, 1]),
     ));
 
     // ground plane
     commands.spawn((
-        MaterialMeshBundle {
-            mesh: meshes.add(Plane3d {
-                half_size: Vec2::new(50.0, 50.0),
-                ..default()
-            }),
-            material: pixelated.add(ExtendedMaterial {
-                base: StandardMaterial {
-                    base_color: colors::BASE,
-                    perceptual_roughness: 1.0,
-                    ..Default::default()
-                },
-                extension: PixelatedExtension { quantize_steps: 15 },
-            }),
+        Mesh3d::from(meshes.add(Plane3d {
+            half_size: Vec2::new(50.0, 50.0),
             ..default()
-        },
+        })),
+        MeshMaterial3d::from(pixelated.add(ExtendedMaterial {
+            base: StandardMaterial {
+                base_color: colors::BASE,
+                perceptual_roughness: 1.0,
+                ..Default::default()
+            },
+            extension: PixelatedExtension { quantize_steps: 15 },
+        })),
         pixelated_pass_layer.0.clone(),
     ));
 
     commands.spawn((
-        Camera3dBundle {
-            camera_3d: Camera3d {
-                // clear_color: ClearColorConfig::Custom(
-                //     colors::SKY,
-                // ),
-                ..default()
-            },
-            camera: Camera {
-                hdr: true,
-                ..default()
-            },
-            transform: Transform::from_xyz(0.0, 6., 12.0)
-                .looking_at(Vec3::new(0., 1., 0.), Vec3::Y),
-            tonemapping: bevy::core_pipeline::tonemapping::Tonemapping::TonyMcMapface,
-            color_grading: ColorGrading {
-                // post_saturation: 1.2,
-                ..default()
-            },
+        Camera3d::default(),
+        Camera {
+            hdr: true,
+            ..default()
+        },
+        Msaa::Off,
+        Transform::from_xyz(0.0, 6., 12.0).looking_at(Vec3::new(0., 1., 0.), Vec3::Y),
+        bevy::core_pipeline::tonemapping::Tonemapping::TonyMcMapface,
+        ColorGrading {
+            // post_saturation: 1.2,
             ..default()
         },
         // depth prepass is required for pixelated.wgsl
@@ -163,7 +145,7 @@ fn setup(
 
 fn rotate(mut query: Query<&mut Transform, With<Shape>>, time: Res<Time>) {
     for mut transform in &mut query {
-        transform.rotate_y(time.delta_seconds() / 2.);
+        transform.rotate_y(time.delta_secs() / 2.);
     }
 }
 

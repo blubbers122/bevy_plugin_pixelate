@@ -25,30 +25,23 @@ fn main() {
             Update,
             (circle_rotator_system, light_rotator_system, rotator_system),
         )
-        .insert_resource(Msaa::Off)
         .run();
 }
 
 fn setup_camera(mut commands: Commands) {
     commands.spawn((
-        Camera3dBundle {
-            camera_3d: Camera3d {
-                // clear_color: ClearColorConfig::Custom(colors::SKY),
-                ..default()
-            },
-            camera: Camera {
-                hdr: true,
-                ..default()
-            },
-            transform: Transform::from_translation(Vec3::new(0.0, 10.0, 15.0))
-                .looking_at(Vec3::new(0., 4., 0.), Vec3::Y),
-            tonemapping: bevy::core_pipeline::tonemapping::Tonemapping::TonyMcMapface,
-            projection: Projection::Orthographic(OrthographicProjection {
-                scale: 0.1,
-                ..default()
-            }),
+        Camera3d::default(),
+        Camera {
+            hdr: true,
             ..default()
         },
+        Transform::from_translation(Vec3::new(0.0, 10.0, 15.0))
+            .looking_at(Vec3::new(0., 4., 0.), Vec3::Y),
+        bevy::core_pipeline::tonemapping::Tonemapping::TonyMcMapface,
+        Projection::Orthographic(OrthographicProjection {
+            scale: 0.1,
+            ..OrthographicProjection::default_3d()
+        }),
         // depth prepass is required for pixelated.wgsl
         DepthPrepass,
         // normal prepass is required for pixelated.wgsl
@@ -56,6 +49,7 @@ fn setup_camera(mut commands: Commands) {
         // PixelatedCamera causes this camera to be used to generate the
         // pixelated scene
         PixelatedCamera,
+        Msaa::Off,
     ));
 }
 
@@ -71,198 +65,128 @@ fn setup_scene(
 ) {
     // cubes
     commands.spawn((
-        MaterialMeshBundle {
-            mesh: meshes.add(Cuboid::from_size(Vec3::splat(1.0))),
-            transform: Transform::from_xyz(6.0, 4., -20.0),
-            material: pixelated.add(ExtendedMaterial {
-                base: StandardMaterial {
-                    base_color: colors::RED,
-                    // can be used in forward or deferred mode.
-                    opaque_render_method: OpaqueRendererMethod::Auto,
-                    // in deferred mode, only the PbrInput can be modified (uvs, color and other material properties),
-                    // in forward mode, the output can also be modified after lighting is applied.
-                    // see the fragment shader `extended_material.wgsl` for more info.
-                    // Note: to run in deferred mode, you must also add a `DeferredPrepass` component to the camera and either
-                    // change the above to `OpaqueRendererMethod::Deferred` or add the `DefaultOpaqueRendererMethod` resource.
-                    perceptual_roughness: 1.0,
-                    ..Default::default()
-                },
-                extension: PixelatedExtension { quantize_steps: 5 },
-            }),
-            ..default()
-        },
+        Mesh3d::from(meshes.add(Cuboid::from_size(Vec3::splat(1.0)))),
+        Transform::from_xyz(6.0, 4., -20.0),
+        MeshMaterial3d::from(pixelated.add(ExtendedMaterial {
+            base: StandardMaterial {
+                base_color: colors::RED,
+                // can be used in forward or deferred mode.
+                opaque_render_method: OpaqueRendererMethod::Auto,
+                // in deferred mode, only the PbrInput can be modified (uvs, color and other material properties),
+                // in forward mode, the output can also be modified after lighting is applied.
+                // see the fragment shader `extended_material.wgsl` for more info.
+                // Note: to run in deferred mode, you must also add a `DeferredPrepass` component to the camera and either
+                // change the above to `OpaqueRendererMethod::Deferred` or add the `DefaultOpaqueRendererMethod` resource.
+                perceptual_roughness: 1.0,
+                ..Default::default()
+            },
+            extension: PixelatedExtension { quantize_steps: 5 },
+        })),
         Rotate,
         pixelated_pass_layer.0.clone(),
     ));
     commands.spawn((
-        MaterialMeshBundle {
-            mesh: meshes.add(Cuboid::from_size(Vec3::splat(2.0))),
-            transform: Transform::from_xyz(0.0, 0., 0.0),
-            material: pixelated.add(ExtendedMaterial {
-                base: StandardMaterial {
-                    base_color: colors::GREEN,
-                    // can be used in forward or deferred mode.
-                    opaque_render_method: OpaqueRendererMethod::Auto,
-                    // in deferred mode, only the PbrInput can be modified (uvs, color and other material properties),
-                    // in forward mode, the output can also be modified after lighting is applied.
-                    // see the fragment shader `extended_material.wgsl` for more info.
-                    // Note: to run in deferred mode, you must also add a `DeferredPrepass` component to the camera and either
-                    // change the above to `OpaqueRendererMethod::Deferred` or add the `DefaultOpaqueRendererMethod` resource.
-                    perceptual_roughness: 1.0,
-                    ..Default::default()
-                },
-                extension: PixelatedExtension { quantize_steps: 15 },
-            }),
-            ..default()
-        },
+        Mesh3d::from(meshes.add(Cuboid::from_size(Vec3::splat(2.0)))),
+        Transform::from_xyz(0.0, 0., 0.0),
+        MeshMaterial3d::from(pixelated.add(ExtendedMaterial {
+            base: StandardMaterial {
+                base_color: colors::GREEN,
+                // can be used in forward or deferred mode.
+                opaque_render_method: OpaqueRendererMethod::Auto,
+                // in deferred mode, only the PbrInput can be modified (uvs, color and other material properties),
+                // in forward mode, the output can also be modified after lighting is applied.
+                // see the fragment shader `extended_material.wgsl` for more info.
+                // Note: to run in deferred mode, you must also add a `DeferredPrepass` component to the camera and either
+                // change the above to `OpaqueRendererMethod::Deferred` or add the `DefaultOpaqueRendererMethod` resource.
+                perceptual_roughness: 1.0,
+                ..Default::default()
+            },
+            extension: PixelatedExtension { quantize_steps: 15 },
+        })),
         Rotate,
         pixelated_pass_layer.0.clone(),
     ));
     commands.spawn((
-        MaterialMeshBundle {
-            mesh: meshes.add(Torus {
-                major_radius: 4.,
-                minor_radius: 2.,
-                ..default()
-            }),
-            transform: Transform::from_xyz(0.0, 0., 0.0),
-            material: pixelated.add(ExtendedMaterial {
-                base: StandardMaterial {
-                    base_color: colors::GREEN,
-                    // can be used in forward or deferred mode.
-                    opaque_render_method: OpaqueRendererMethod::Auto,
-                    // in deferred mode, only the PbrInput can be modified (uvs, color and other material properties),
-                    // in forward mode, the output can also be modified after lighting is applied.
-                    // see the fragment shader `extended_material.wgsl` for more info.
-                    // Note: to run in deferred mode, you must also add a `DeferredPrepass` component to the camera and either
-                    // change the above to `OpaqueRendererMethod::Deferred` or add the `DefaultOpaqueRendererMethod` resource.
-                    perceptual_roughness: 1.0,
-                    ..Default::default()
-                },
-                extension: PixelatedExtension { quantize_steps: 15 },
-            }),
+        Mesh3d::from(meshes.add(Torus {
+            major_radius: 4.,
+            minor_radius: 2.,
             ..default()
-        },
+        })),
+        Transform::from_xyz(0.0, 0., 0.0),
+        MeshMaterial3d::from(pixelated.add(ExtendedMaterial {
+            base: StandardMaterial {
+                base_color: colors::GREEN,
+                // can be used in forward or deferred mode.
+                opaque_render_method: OpaqueRendererMethod::Auto,
+                // in deferred mode, only the PbrInput can be modified (uvs, color and other material properties),
+                // in forward mode, the output can also be modified after lighting is applied.
+                // see the fragment shader `extended_material.wgsl` for more info.
+                // Note: to run in deferred mode, you must also add a `DeferredPrepass` component to the camera and either
+                // change the above to `OpaqueRendererMethod::Deferred` or add the `DefaultOpaqueRendererMethod` resource.
+                perceptual_roughness: 1.0,
+                ..Default::default()
+            },
+            extension: PixelatedExtension { quantize_steps: 15 },
+        })),
         Rotate,
         pixelated_pass_layer.0.clone(),
     ));
     commands.spawn((
-        MaterialMeshBundle {
-            mesh: meshes.add(Cylinder {
-                radius: 2.,
-                half_height: 2.,
-                ..default()
-            }),
-            transform: Transform::from_xyz(-15.0, 2., 0.0),
-            material: pixelated.add(ExtendedMaterial {
-                base: StandardMaterial {
-                    base_color: colors::SAPPHIRE,
-                    // can be used in forward or deferred mode.
-                    opaque_render_method: OpaqueRendererMethod::Auto,
-                    // in deferred mode, only the PbrInput can be modified (uvs, color and other material properties),
-                    // in forward mode, the output can also be modified after lighting is applied.
-                    // see the fragment shader `extended_material.wgsl` for more info.
-                    // Note: to run in deferred mode, you must also add a `DeferredPrepass` component to the camera and either
-                    // change the above to `OpaqueRendererMethod::Deferred` or add the `DefaultOpaqueRendererMethod` resource.
-                    perceptual_roughness: 1.0,
-                    emissive: colors::SAPPHIRE.into(),
-                    ..Default::default()
-                },
-                extension: PixelatedExtension { quantize_steps: 15 },
-            }),
+        Mesh3d::from(meshes.add(Cylinder {
+            radius: 2.,
+            half_height: 2.,
             ..default()
-        },
+        })),
+        Transform::from_xyz(-15.0, 2., 0.0),
+        MeshMaterial3d::from(pixelated.add(ExtendedMaterial {
+            base: StandardMaterial {
+                base_color: colors::SAPPHIRE,
+                // can be used in forward or deferred mode.
+                opaque_render_method: OpaqueRendererMethod::Auto,
+                // in deferred mode, only the PbrInput can be modified (uvs, color and other material properties),
+                // in forward mode, the output can also be modified after lighting is applied.
+                // see the fragment shader `extended_material.wgsl` for more info.
+                // Note: to run in deferred mode, you must also add a `DeferredPrepass` component to the camera and either
+                // change the above to `OpaqueRendererMethod::Deferred` or add the `DefaultOpaqueRendererMethod` resource.
+                perceptual_roughness: 1.0,
+                emissive: colors::SAPPHIRE.into(),
+                ..Default::default()
+            },
+            extension: PixelatedExtension { quantize_steps: 15 },
+        })),
         // Rotate,
         pixelated_pass_layer.0.clone(),
     ));
     commands.spawn((
-        MaterialMeshBundle {
-            mesh: meshes.add(Cuboid::from_size(Vec3::splat(2.0))),
-            transform: Transform::from_xyz(5.0, 4., -5.0),
-            material: pixelated.add(ExtendedMaterial {
-                base: StandardMaterial {
-                    base_color: colors::RED,
-                    // can be used in forward or deferred mode.
-                    opaque_render_method: OpaqueRendererMethod::Auto,
-                    // in deferred mode, only the PbrInput can be modified (uvs, color and other material properties),
-                    // in forward mode, the output can also be modified after lighting is applied.
-                    // see the fragment shader `extended_material.wgsl` for more info.
-                    // Note: to run in deferred mode, you must also add a `DeferredPrepass` component to the camera and either
-                    // change the above to `OpaqueRendererMethod::Deferred` or add the `DefaultOpaqueRendererMethod` resource.
-                    perceptual_roughness: 1.0,
-                    ..Default::default()
-                },
-                extension: PixelatedExtension { quantize_steps: 15 },
-            }),
-            ..default()
-        },
+        Mesh3d::from(meshes.add(Cuboid::from_size(Vec3::splat(2.0)))),
+        Transform::from_xyz(5.0, 4., -5.0),
+        MeshMaterial3d::from(pixelated.add(ExtendedMaterial {
+            base: StandardMaterial {
+                base_color: colors::RED,
+                // can be used in forward or deferred mode.
+                opaque_render_method: OpaqueRendererMethod::Auto,
+                // in deferred mode, only the PbrInput can be modified (uvs, color and other material properties),
+                // in forward mode, the output can also be modified after lighting is applied.
+                // see the fragment shader `extended_material.wgsl` for more info.
+                // Note: to run in deferred mode, you must also add a `DeferredPrepass` component to the camera and either
+                // change the above to `OpaqueRendererMethod::Deferred` or add the `DefaultOpaqueRendererMethod` resource.
+                perceptual_roughness: 1.0,
+                ..Default::default()
+            },
+            extension: PixelatedExtension { quantize_steps: 15 },
+        })),
         Rotate,
         pixelated_pass_layer.0.clone(),
     ));
 
     for i in 0..10 {
         commands.spawn((
-            MaterialMeshBundle {
-                mesh: meshes.add(Cuboid::from_size(Vec3::splat(2.0))),
-                transform: Transform::from_xyz(-8.0, 2. * i as f32 + 0.5, -4.0)
-                    .with_rotation(Quat::from_rotation_y(i as f32 * FRAC_PI_8)),
-                material: pixelated.add(ExtendedMaterial {
-                    base: StandardMaterial {
-                        base_color: colors::LAVENDER,
-                        // can be used in forward or deferred mode.
-                        opaque_render_method: OpaqueRendererMethod::Auto,
-                        // in deferred mode, only the PbrInput can be modified (uvs, color and other material properties),
-                        // in forward mode, the output can also be modified after lighting is applied.
-                        // see the fragment shader `extended_material.wgsl` for more info.
-                        // Note: to run in deferred mode, you must also add a `DeferredPrepass` component to the camera and either
-                        // change the above to `OpaqueRendererMethod::Deferred` or add the `DefaultOpaqueRendererMethod` resource.
-                        perceptual_roughness: 1.0,
-                        ..Default::default()
-                    },
-                    extension: PixelatedExtension { quantize_steps: 15 },
-                }),
-                ..default()
-            },
-            // Rotate,
-            pixelated_pass_layer.0.clone(),
-        ));
-    }
-    commands.spawn((
-        MaterialMeshBundle {
-            mesh: meshes.add(Sphere {
-                radius: 1.,
-                ..default()
-            }),
-            transform: Transform::from_xyz(6.0, 4., 0.0),
-            material: pixelated.add(ExtendedMaterial {
+            Mesh3d::from(meshes.add(Cuboid::from_size(Vec3::splat(2.0)))),
+            Transform::from_xyz(-8.0, 2. * i as f32 + 0.5, -4.0)
+                .with_rotation(Quat::from_rotation_y(i as f32 * FRAC_PI_8)),
+            MeshMaterial3d::from(pixelated.add(ExtendedMaterial {
                 base: StandardMaterial {
-                    base_color: colors::RED,
-                    // can be used in forward or deferred mode.
-                    opaque_render_method: OpaqueRendererMethod::Auto,
-                    // in deferred mode, only the PbrInput can be modified (uvs, color and other material properties),
-                    // in forward mode, the output can also be modified after lighting is applied.
-                    // see the fragment shader `extended_material.wgsl` for more info.
-                    // Note: to run in deferred mode, you must also add a `DeferredPrepass` component to the camera and either
-                    // change the above to `OpaqueRendererMethod::Deferred` or add the `DefaultOpaqueRendererMethod` resource.
-                    perceptual_roughness: 1.0,
-                    ..Default::default()
-                },
-                extension: PixelatedExtension { quantize_steps: 5 },
-            }),
-            ..default()
-        },
-        Rotate,
-        pixelated_pass_layer.0.clone(),
-    ));
-
-    commands.spawn((
-        MaterialMeshBundle {
-            mesh: meshes.add(Plane3d::default().mesh().size(30., 30.).build()),
-            transform: Transform::from_xyz(0.0, 0.0, 0.0)
-                .with_rotation(Quat::from_rotation_y(FRAC_PI_4)),
-            material: pixelated.add(ExtendedMaterial {
-                base: StandardMaterial {
-                    base_color: colors::BASE,
+                    base_color: colors::LAVENDER,
                     // can be used in forward or deferred mode.
                     opaque_render_method: OpaqueRendererMethod::Auto,
                     // in deferred mode, only the PbrInput can be modified (uvs, color and other material properties),
@@ -274,23 +198,54 @@ fn setup_scene(
                     ..Default::default()
                 },
                 extension: PixelatedExtension { quantize_steps: 15 },
-            }),
-            // material: materials.add(StandardMaterial {
-            //     base_color: colors::FLAMINGO,
-            //     // can be used in forward or deferred mode.
-            //     opaque_render_method:
-            //         OpaqueRendererMethod::Auto,
-            //     // in deferred mode, only the PbrInput can be modified (uvs, color and other material properties),
-            //     // in forward mode, the output can also be modified after lighting is applied.
-            //     // see the fragment shader `extended_material.wgsl` for more info.
-            //     // Note: to run in deferred mode, you must also add a `DeferredPrepass` component to the camera and either
-            //     // change the above to `OpaqueRendererMethod::Deferred` or add the `DefaultOpaqueRendererMethod` resource.
-            //     perceptual_roughness: 1.0,
-            //     ..Default::default()
-            // }),
+            })),
+            // Rotate,
+            pixelated_pass_layer.0.clone(),
+        ));
+    }
+    commands.spawn((
+        Mesh3d::from(meshes.add(Sphere {
+            radius: 1.,
             ..default()
-        },
-        // ShadowR
+        })),
+        Transform::from_xyz(6.0, 4., 0.0),
+        MeshMaterial3d::from(pixelated.add(ExtendedMaterial {
+            base: StandardMaterial {
+                base_color: colors::RED,
+                // can be used in forward or deferred mode.
+                opaque_render_method: OpaqueRendererMethod::Auto,
+                // in deferred mode, only the PbrInput can be modified (uvs, color and other material properties),
+                // in forward mode, the output can also be modified after lighting is applied.
+                // see the fragment shader `extended_material.wgsl` for more info.
+                // Note: to run in deferred mode, you must also add a `DeferredPrepass` component to the camera and either
+                // change the above to `OpaqueRendererMethod::Deferred` or add the `DefaultOpaqueRendererMethod` resource.
+                perceptual_roughness: 1.0,
+                ..Default::default()
+            },
+            extension: PixelatedExtension { quantize_steps: 5 },
+        })),
+        Rotate,
+        pixelated_pass_layer.0.clone(),
+    ));
+
+    commands.spawn((
+        Mesh3d::from(meshes.add(Plane3d::default().mesh().size(30., 30.).build())),
+        Transform::from_xyz(0.0, 0.0, 0.0).with_rotation(Quat::from_rotation_y(FRAC_PI_4)),
+        MeshMaterial3d::from(pixelated.add(ExtendedMaterial {
+            base: StandardMaterial {
+                base_color: colors::BASE,
+                // can be used in forward or deferred mode.
+                opaque_render_method: OpaqueRendererMethod::Auto,
+                // in deferred mode, only the PbrInput can be modified (uvs, color and other material properties),
+                // in forward mode, the output can also be modified after lighting is applied.
+                // see the fragment shader `extended_material.wgsl` for more info.
+                // Note: to run in deferred mode, you must also add a `DeferredPrepass` component to the camera and either
+                // change the above to `OpaqueRendererMethod::Deferred` or add the `DefaultOpaqueRendererMethod` resource.
+                perceptual_roughness: 1.0,
+                ..Default::default()
+            },
+            extension: PixelatedExtension { quantize_steps: 15 },
+        })),
         pixelated_pass_layer.0.clone(),
     ));
 
@@ -314,18 +269,16 @@ fn setup_scene(
         extension: PixelatedExtension { quantize_steps: 15 },
     });
     commands.spawn((
-        MaterialMeshBundle {
-            transform: Transform::from_xyz(0.0, 4.0, -10.0),
-            mesh: meshes.add(
+        Mesh3d::from(
+            meshes.add(
                 // NOTE: for normal maps and depth maps to work, the mesh
                 // needs tangents generated.
                 Mesh::from(Cuboid::from_size(Vec3::splat(4.0)))
                     .with_generated_tangents()
                     .unwrap(),
             ),
-            material: parallax_material.clone(),
-            ..default()
-        },
+        ),
+        MeshMaterial3d::from(parallax_material.clone()),
         pixelated_pass_layer.0.clone(),
         Rotate,
     ));
@@ -337,34 +290,31 @@ fn setup_scene(
         let light_color = Color::Lcha(bevy::color::Lcha::new(1., 1., 360. / 10. * i as f32, 1.));
         commands
             .spawn((
-                PointLightBundle {
-                    transform,
-                    point_light: PointLight {
-                        // intensity: (),
-                        // range: (),
-                        color: light_color,
-                        shadows_enabled: true,
-                        ..default()
-                    },
+                transform,
+                PointLight {
+                    // intensity: (),
+                    // range: (),
+                    radius: 0.5,
+                    color: light_color,
+                    shadows_enabled: true,
                     ..default()
                 },
                 RenderLayers::layer(0).with(1),
             ))
             .with_children(|parent| {
                 parent.spawn((
-                    MaterialMeshBundle {
-                        mesh: meshes.add(Sphere {
-                            radius: 0.5,
-                            ..default()
-                        }),
-
-                        material: materials.add(StandardMaterial {
+                    Mesh3d::from(meshes.add(Sphere {
+                        radius: 0.5,
+                        ..default()
+                    })),
+                    MeshMaterial3d::from(pixelated.add(ExtendedMaterial {
+                        base: StandardMaterial {
                             base_color: light_color,
                             unlit: true,
                             ..Default::default()
-                        }),
-                        ..default()
-                    },
+                        },
+                        extension: PixelatedExtension { quantize_steps: 5 },
+                    })),
                     NotShadowCaster,
                     NotShadowReceiver,
                     pixelated_pass_layer.0.clone(),
@@ -376,26 +326,17 @@ fn setup_scene(
         color: Color::WHITE,
         brightness: 0.2,
     });
-    commands.spawn(DirectionalLightBundle {
-        directional_light: DirectionalLight {
+    commands.spawn((
+        DirectionalLight {
             illuminance: 10000.,
             shadows_enabled: true,
             ..default()
         },
-        transform: Transform {
+        Transform {
             translation: Vec3::new(0.0, 20.0, 0.0),
             rotation: Quat::from_rotation_x(-PI / 4.) + Quat::from_rotation_z(-PI),
             ..default()
         },
-        // The default cascade config is designed to handle large scenes.
-        // As this example has a much smaller world, we can tighten the shadow
-        // bounds for better visual quality.
-        // cascade_shadow_config: CascadeShadowConfigBuilder {
-        //     first_cascade_far_bound: 4.0,
-        //     maximum_distance: 1000.0,
-        //     ..default()
-        // }
-        // .into(),
-        ..default()
-    });
+        // pixelated_pass_layer.0.clone(),
+    ));
 }

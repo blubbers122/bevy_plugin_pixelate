@@ -1,13 +1,14 @@
 use crate::PixelatedExtension;
 use bevy::{
-    pbr::{ExtendedMaterial, NotShadowCaster, NotShadowReceiver},
+    core_pipeline::tonemapping::Tonemapping,
+    image::ImageSampler,
+    pbr::{ExtendedMaterial, NotShadowCaster, NotShadowReceiver, StandardMaterial},
     prelude::*,
     render::{
         camera::RenderTarget,
         render_resource::{
             Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
         },
-        texture::ImageSampler,
         view::RenderLayers,
     },
 };
@@ -83,21 +84,25 @@ fn setup(
     let pixelated_pass_layer = RenderLayers::layer(1);
     commands.insert_resource(PixelatedPassLayer(pixelated_pass_layer));
 
+    let mesh = Mesh::from(Rectangle::new(16.0 * 1.5, 9.0 * 1.5));
+    // let material = StandardMaterial {
+    //     base_color_texture: Some(image_handle),
+    //     unlit: true,
+    //     ..default()
+    // };
+
     // Display the pixelated image we generated with the first camera
     // it is likely that not only the size, but the approach used here
     // should change.
     // ex: doesn't really need to be a PbrBundle.
     commands.spawn((
-        PbrBundle {
-            mesh: meshes.add(Mesh::from(Rectangle::new(16.0 * 1.5, 9.0 * 1.5))),
-            material: materials.add(StandardMaterial {
-                base_color_texture: Some(image_handle),
-                unlit: true,
-                ..default()
-            }),
-            transform: Transform::from_xyz(0., 0., 0.),
+        Mesh3d(meshes.add(mesh)),
+        MeshMaterial3d(materials.add(StandardMaterial {
+            base_color_texture: Some(image_handle),
+            unlit: true,
             ..default()
-        },
+        })),
+        Transform::from_xyz(0., 0., 0.),
         NotShadowCaster,
         NotShadowReceiver,
         MainPassDisplay,
@@ -105,11 +110,11 @@ fn setup(
     ));
 
     // The main pass camera.
-    commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 0.0, 15.0).looking_at(Vec3::ZERO, Vec3::Y),
-        tonemapping: bevy::core_pipeline::tonemapping::Tonemapping::TonyMcMapface,
-        ..default()
-    });
+    commands.spawn((
+        Camera3d::default(),
+        Transform::from_xyz(0.0, 0.0, 15.0).looking_at(Vec3::ZERO, Vec3::Y),
+        Tonemapping::TonyMcMapface,
+    ));
 }
 
 // Turns any user-supplied camera (labelled with `PixelatedCamera`)

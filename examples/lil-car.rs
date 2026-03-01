@@ -36,7 +36,6 @@ fn main() {
                 apply_scene_hooks,
             ),
         )
-        .insert_resource(Msaa::Off)
         .init_state::<MyStates>()
         .add_loading_state(
             LoadingState::new(MyStates::AssetLoading)
@@ -67,35 +66,33 @@ enum MyStates {
 
 fn setup_camera(mut commands: Commands) {
     commands.spawn((
-        Camera3dBundle {
-            camera_3d: Camera3d {
-                // clear_color: ClearColorConfig::Custom(
-                //     colors::SKY,
-                // ),
-                ..default()
-            },
-            camera: Camera {
-                hdr: true,
-                ..default()
-            },
-            transform: Transform::from_translation(Vec3::new(0.0, 10.0, 15.0))
-                .looking_at(Vec3::new(0., 4., 0.), Vec3::Y),
-            tonemapping: bevy::core_pipeline::tonemapping::Tonemapping::TonyMcMapface,
-            color_grading: ColorGrading {
-                // post_saturation: 1.8,
-                ..default()
-            },
-            projection: Projection::Orthographic(OrthographicProjection {
-                // near: todo!(),
-                // far: todo!(),
-                // viewport_origin: todo!(),
-                // scaling_mode: todo!(),
-                scale: 0.1,
-                // area: todo!()
-                ..default()
-            }),
+        Camera3d {
+            // clear_color: ClearColorConfig::Custom(
+            //     colors::SKY,
+            // ),
             ..default()
         },
+        Camera {
+            hdr: true,
+            ..default()
+        },
+        Transform::from_translation(Vec3::new(0.0, 10.0, 15.0))
+            .looking_at(Vec3::new(0., 4., 0.), Vec3::Y),
+        bevy::core_pipeline::tonemapping::Tonemapping::TonyMcMapface,
+        ColorGrading {
+            // post_saturation: 1.8,
+            ..default()
+        },
+        Projection::Orthographic(OrthographicProjection {
+            // near: todo!(),
+            // far: todo!(),
+            // viewport_origin: todo!(),
+            // scaling_mode: todo!(),
+            scale: 0.1,
+            // area: todo!()
+            ..OrthographicProjection::default_3d()
+        }),
+        Msaa::Off,
         // depth prepass is required for pixelated.wgsl
         DepthPrepass,
         // normal prepass is required for pixelated.wgsl
@@ -116,84 +113,47 @@ fn setup_scene(
     cars: Res<CarAssets>,
 ) {
     commands.spawn((
-        MaterialMeshBundle {
-            mesh: meshes.add(
+        Mesh3d::from(
+            meshes.add(
                 Mesh::try_from(Plane3d {
                     half_size: Vec2::new(30., 30.),
                     ..default()
                 })
                 .unwrap(),
             ),
-            transform: Transform::from_xyz(0.0, 0.0, 0.0)
-                .with_rotation(Quat::from_rotation_y(FRAC_PI_4)),
-            material: pixelated.add(ExtendedMaterial {
-                base: StandardMaterial {
-                    base_color: colors::BASE,
-                    perceptual_roughness: 1.0,
-                    ..Default::default()
-                },
-                extension: PixelatedExtension { quantize_steps: 15 },
-            }),
-            ..default()
-        },
+        ),
+        Transform::from_xyz(0.0, 0.0, 0.0).with_rotation(Quat::from_rotation_y(FRAC_PI_4)),
+        MeshMaterial3d::from(pixelated.add(ExtendedMaterial {
+            base: StandardMaterial {
+                base_color: colors::BASE,
+                perceptual_roughness: 1.0,
+                ..Default::default()
+            },
+            extension: PixelatedExtension { quantize_steps: 15 },
+        })),
         pixelated_pass_layer.0.clone(),
     ));
     // cubes
     commands.spawn((
-        MaterialMeshBundle {
-            mesh: meshes.add(Mesh::from(Cuboid::default())),
-            transform: Transform::from_xyz(6.0, 4., -20.0),
-            material: pixelated.add(ExtendedMaterial {
-                base: StandardMaterial {
-                    base_color: colors::RED,
-                    perceptual_roughness: 1.0,
-                    ..Default::default()
-                },
-                extension: PixelatedExtension { quantize_steps: 5 },
-            }),
-            ..default()
-        },
+        Mesh3d::from(meshes.add(Mesh::from(Cuboid::default()))),
+        Transform::from_xyz(6.0, 4., -20.0),
+        MeshMaterial3d::from(pixelated.add(ExtendedMaterial {
+            base: StandardMaterial {
+                base_color: colors::RED,
+                perceptual_roughness: 1.0,
+                ..Default::default()
+            },
+            extension: PixelatedExtension { quantize_steps: 5 },
+        })),
         Rotate,
         pixelated_pass_layer.0.clone(),
     ));
-    // commands.spawn((SceneBundle {
-    //     scene: cars.taxi_scene.clone(),
-    //     transform: Transform::from_xyz(0.,-4.,0.,)
-    //         .with_rotation(Quat::from_rotation_y(
-    //             -FRAC_PI_4,
-    //     )),
-    //     ..default()
-    // }, pixelated_pass_layer.0));
-
     commands.spawn((
-        SceneBundle {
-            scene: cars.taxi_scene.clone(),
-            transform: Transform::from_xyz(0., 0., 0.)
-                .with_rotation(Quat::from_rotation_y(-FRAC_PI_4)),
-            ..default()
-        },
+        SceneRoot(cars.taxi_scene.clone()),
+        Transform::from_xyz(0., 0., 0.).with_rotation(Quat::from_rotation_y(-FRAC_PI_4)),
         pixelated_pass_layer.0.clone(),
         CircleRotate,
     ));
-
-    // commands.spawn((
-    //     HookedSceneBundle {
-    //         scene: SceneBundle {
-    //             scene: cars.taxi_scene.clone(),
-    //             transform: Transform::from_xyz(0., 0., 0.)
-    //                 .with_rotation(Quat::from_rotation_y(-FRAC_PI_4)),
-    //             ..default()
-    //         },
-    //         hook: SceneHook::new(move |entity, cmds| {
-    //             // only operate on entities with a `Handle<StandardMaterial>`.
-    //             let Some(_) = entity.get::<Handle<StandardMaterial>>() else {
-    //                 return;
-    //             };
-    //             cmds.insert(layer);
-    //         }),
-    //     },
-    //     CircleRotate,
-    // ));
 }
 
 fn setup_lights(
@@ -209,33 +169,26 @@ fn setup_lights(
         let light_color = Color::Lcha(bevy::color::Lcha::new(1., 1., 360. / 10. * i as f32, 1.));
         commands
             .spawn((
-                PointLightBundle {
-                    transform,
-                    point_light: PointLight {
-                        intensity: 400000.,
-                        color: light_color,
-                        shadows_enabled: true,
-                        ..default()
-                    },
+                transform,
+                PointLight {
+                    intensity: 400000.,
+                    color: light_color,
+                    shadows_enabled: true,
                     ..default()
                 },
                 RenderLayers::from_layers(&[0, 1]),
             ))
             .with_children(|parent| {
                 parent.spawn((
-                    MaterialMeshBundle {
-                        mesh: meshes.add(Sphere {
-                            radius: 0.5,
-                            ..default()
-                        }),
-
-                        material: materials.add(StandardMaterial {
-                            base_color: light_color,
-                            unlit: true,
-                            ..Default::default()
-                        }),
+                    Mesh3d::from(meshes.add(Sphere {
+                        radius: 0.5,
                         ..default()
-                    },
+                    })),
+                    MeshMaterial3d::from(materials.add(StandardMaterial {
+                        base_color: light_color,
+                        unlit: true,
+                        ..Default::default()
+                    })),
                     NotShadowCaster,
                     NotShadowReceiver,
                     pixelated_pass_layer.0.clone(),
@@ -248,17 +201,14 @@ fn setup_lights(
         brightness: 0.2,
     });
     commands.spawn((
-        DirectionalLightBundle {
-            directional_light: DirectionalLight {
-                illuminance: 10000.,
-                shadows_enabled: true,
-                ..default()
-            },
-            transform: Transform {
-                translation: Vec3::new(0.0, 20.0, 0.0),
-                rotation: Quat::from_rotation_x(-PI / 4.) + Quat::from_rotation_z(-PI),
-                ..default()
-            },
+        DirectionalLight {
+            illuminance: 5000.,
+            shadows_enabled: true,
+            ..default()
+        },
+        Transform {
+            translation: Vec3::new(0.0, 20.0, 0.0),
+            rotation: Quat::from_rotation_x(-PI / 4.) + Quat::from_rotation_z(-PI),
             ..default()
         },
         RenderLayers::from_layers(&[0, 1]),
@@ -267,7 +217,7 @@ fn setup_lights(
 
 fn apply_scene_hooks(
     mut commands: Commands,
-    query: Query<(Entity, Option<&Name>), (With<Handle<Mesh>>, Without<RenderLayers>)>,
+    query: Query<(Entity, Option<&Name>), (With<Mesh3d>, Without<RenderLayers>)>,
     pixelated_pass_layer: Res<PixelatedPassLayer>,
 ) {
     for (entity, name) in query.iter() {

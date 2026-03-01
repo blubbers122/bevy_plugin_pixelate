@@ -19,8 +19,4 @@ impl MaterialExtension for PixelatedExtension {
     fn fragment_shader() -> ShaderRef {
         "pixelated.wgsl".into()
     }
-
-    // fn deferred_fragment_shader() -> ShaderRef {
-    //     "shaders/pixelated.wgsl".into()
-    // }
 }
