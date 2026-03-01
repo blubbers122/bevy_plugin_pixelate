@@ -1,8 +1,10 @@
 use bevy::{
+    camera::visibility::RenderLayers,
     core_pipeline::prepass::{DepthPrepass, NormalPrepass},
-    pbr::{ExtendedMaterial, NotShadowCaster, NotShadowReceiver, OpaqueRendererMethod},
+    light::{NotShadowCaster, NotShadowReceiver},
+    pbr::{ExtendedMaterial, OpaqueRendererMethod},
     prelude::*,
-    render::view::RenderLayers,
+    render::view::Hdr,
 };
 use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
 use gen_04_pixels::{
@@ -32,8 +34,9 @@ fn main() {
 fn setup_camera(mut commands: Commands) {
     commands.spawn((
         Camera3d::default(),
+        Hdr,
         Camera {
-            hdr: true,
+            // hdr: true,
             ..default()
         },
         Transform::from_translation(Vec3::new(0.0, 10.0, 15.0))

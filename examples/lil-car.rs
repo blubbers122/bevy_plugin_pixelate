@@ -1,9 +1,11 @@
 use bevy::{
+    camera::visibility::RenderLayers,
     core_pipeline::prepass::{DepthPrepass, NormalPrepass},
     gltf::GltfNode,
-    pbr::{ExtendedMaterial, NotShadowCaster, NotShadowReceiver},
+    light::{NotShadowCaster, NotShadowReceiver},
+    pbr::ExtendedMaterial,
     prelude::*,
-    render::view::{ColorGrading, RenderLayers},
+    render::view::{ColorGrading, Hdr},
 };
 use bevy_asset_loader::{
     asset_collection::AssetCollection,
@@ -73,10 +75,8 @@ fn setup_camera(mut commands: Commands) {
             // ),
             ..default()
         },
-        Camera {
-            hdr: true,
-            ..default()
-        },
+        Hdr,
+        Camera { ..default() },
         Transform::from_translation(Vec3::new(0.0, 10.0, 15.0))
             .looking_at(Vec3::new(0., 4., 0.), Vec3::Y),
         bevy::core_pipeline::tonemapping::Tonemapping::TonyMcMapface,

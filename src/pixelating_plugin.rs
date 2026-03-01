@@ -1,15 +1,13 @@
 use crate::PixelatedExtension;
 use bevy::{
+    camera::{visibility::RenderLayers, ImageRenderTarget, RenderTarget},
     core_pipeline::tonemapping::Tonemapping,
     image::ImageSampler,
-    pbr::{ExtendedMaterial, NotShadowCaster, NotShadowReceiver, StandardMaterial},
+    light::{NotShadowCaster, NotShadowReceiver},
+    pbr::{ExtendedMaterial, StandardMaterial},
     prelude::*,
-    render::{
-        camera::{ImageRenderTarget, RenderTarget},
-        render_resource::{
-            Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
-        },
-        view::RenderLayers,
+    render::render_resource::{
+        Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
     },
 };
 

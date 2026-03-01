@@ -1,11 +1,13 @@
 use bevy::{
+    asset::RenderAssetUsages,
+    camera::visibility::RenderLayers,
     core_pipeline::prepass::{DepthPrepass, NormalPrepass},
     pbr::ExtendedMaterial,
     prelude::*,
     render::{
-        render_asset::RenderAssetUsages,
+        // render_asset::RenderAssetUsages,
         render_resource::{Extent3d, TextureDimension, TextureFormat},
-        view::{ColorGrading, RenderLayers},
+        view::{ColorGrading, Hdr},
     },
 };
 use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
@@ -123,8 +125,9 @@ fn setup(
 
     commands.spawn((
         Camera3d::default(),
+        Hdr,
         Camera {
-            hdr: true,
+            // hdr: true,
             ..default()
         },
         Msaa::Off,

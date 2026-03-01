@@ -1,7 +1,5 @@
 use bevy::{
-    pbr::MaterialExtension,
-    prelude::*,
-    render::render_resource::{AsBindGroup, ShaderRef},
+    pbr::MaterialExtension, prelude::*, render::render_resource::AsBindGroup, shader::ShaderRef,
 };
 pub mod colors;
 pub mod pixelating_plugin;
