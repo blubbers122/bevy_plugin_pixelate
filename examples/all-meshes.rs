@@ -8,7 +8,7 @@ use bevy::{
         view::{ColorGrading, RenderLayers},
     },
 };
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
 use gen_04_pixels::{
     colors,
     pixelating_plugin::{PixelatedCamera, PixelatedPassLayer, PixelatingPlugin},
@@ -21,6 +21,7 @@ fn main() {
     App::new()
         .add_plugins((
             DefaultPlugins.set(ImagePlugin::default_nearest()),
+            EguiPlugin::default(),
             WorldInspectorPlugin::new(),
         ))
         .add_plugins(PixelatingPlugin)

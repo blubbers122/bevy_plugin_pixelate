@@ -5,7 +5,7 @@ use bevy::{
     pbr::{ExtendedMaterial, NotShadowCaster, NotShadowReceiver, StandardMaterial},
     prelude::*,
     render::{
-        camera::RenderTarget,
+        camera::{ImageRenderTarget, RenderTarget},
         render_resource::{
             Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
         },
@@ -127,7 +127,10 @@ fn configure_pixelated_camera(
 ) {
     for (entity, mut camera) in &mut cameras {
         camera.order = -1;
-        camera.target = RenderTarget::Image(image.0.clone());
+        camera.target = RenderTarget::Image(ImageRenderTarget {
+            handle: image.0.clone(),
+            scale_factor: bevy::math::FloatOrd(1.0),
+        });
         commands
             .entity(entity)
             .insert(pixelated_pass_layer.0.clone());

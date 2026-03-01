@@ -4,7 +4,7 @@ use bevy::{
     prelude::*,
     render::view::RenderLayers,
 };
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
 use gen_04_pixels::{
     colors,
     pixelating_plugin::{PixelatedCamera, PixelatedPassLayer, PixelatingPlugin},
@@ -17,6 +17,7 @@ fn main() {
     App::new()
         .add_plugins((
             DefaultPlugins.set(ImagePlugin::default_nearest()),
+            EguiPlugin::default(),
             WorldInspectorPlugin::new(),
         ))
         .add_plugins(PixelatingPlugin)
@@ -325,6 +326,7 @@ fn setup_scene(
     commands.insert_resource(AmbientLight {
         color: Color::WHITE,
         brightness: 0.2,
+        affects_lightmapped_meshes: true, //??
     });
     commands.spawn((
         DirectionalLight {

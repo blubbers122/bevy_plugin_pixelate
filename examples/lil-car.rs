@@ -9,7 +9,7 @@ use bevy_asset_loader::{
     asset_collection::AssetCollection,
     loading_state::{config::ConfigureLoadingState, LoadingState, LoadingStateAppExt},
 };
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
 // use bevy_scene_hook::{HookPlugin, HookedSceneBundle, SceneHook};
 use gen_04_pixels::{
     colors,
@@ -23,6 +23,7 @@ fn main() {
     App::new()
         .add_plugins((
             DefaultPlugins.set(ImagePlugin::default_nearest()),
+            EguiPlugin::default(),
             WorldInspectorPlugin::new(),
             // HookPlugin,
         ))
@@ -199,6 +200,7 @@ fn setup_lights(
     commands.insert_resource(AmbientLight {
         color: Color::WHITE,
         brightness: 0.2,
+        affects_lightmapped_meshes: true, //??
     });
     commands.spawn((
         DirectionalLight {
