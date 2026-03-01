@@ -1,5 +1,5 @@
 use bevy::{
-    camera::visibility::RenderLayers,
+    camera::{primitives::Frustum, visibility::RenderLayers},
     core_pipeline::prepass::{DepthPrepass, NormalPrepass},
     gltf::GltfNode,
     light::{NotShadowCaster, NotShadowReceiver},
@@ -54,8 +54,8 @@ fn main() {
 
 #[derive(AssetCollection, Resource)]
 struct CarAssets {
-    #[asset(path = "car-kit/taxi.glb#Node0")]
-    taxi: Handle<GltfNode>,
+    // #[asset(path = "car-kit/taxi.glb#Node0")]
+    // taxi: Handle<GltfNode>,
     #[asset(path = "car-kit/taxi.glb#Scene0")]
     taxi_scene: Handle<Scene>,
 }
@@ -197,11 +197,12 @@ fn setup_lights(
             });
     }
 
-    commands.insert_resource(AmbientLight {
+    commands.spawn(AmbientLight {
         color: Color::WHITE,
         brightness: 0.2,
-        affects_lightmapped_meshes: true, //??
+        affects_lightmapped_meshes: true,
     });
+
     commands.spawn((
         DirectionalLight {
             illuminance: 5000.,
@@ -213,7 +214,7 @@ fn setup_lights(
             rotation: Quat::from_rotation_x(-PI / 4.) + Quat::from_rotation_z(-PI),
             ..default()
         },
-        RenderLayers::from_layers(&[0, 1]),
+        // RenderLayers::from_layers(&[0, 1]),
     ));
 }
 

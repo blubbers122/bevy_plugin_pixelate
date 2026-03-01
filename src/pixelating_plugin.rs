@@ -6,8 +6,11 @@ use bevy::{
     light::{NotShadowCaster, NotShadowReceiver},
     pbr::{ExtendedMaterial, StandardMaterial},
     prelude::*,
-    render::render_resource::{
-        Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
+    render::{
+        camera::CameraRenderGraph,
+        render_resource::{
+            Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
+        },
     },
 };
 
@@ -22,7 +25,7 @@ impl Plugin for PixelatingPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(
             MaterialPlugin::<ExtendedMaterial<StandardMaterial, PixelatedExtension>> {
-                prepass_enabled: true,
+                // prepass_enabled: true,
                 ..default()
             },
         )
@@ -49,8 +52,8 @@ fn setup(
     mut images: ResMut<Assets<Image>>,
 ) {
     let size = Extent3d {
-        width: 512,
-        height: 288,
+        width: 480,
+        height: 270,
         ..default()
     };
 
@@ -83,11 +86,6 @@ fn setup(
     commands.insert_resource(PixelatedPassLayer(pixelated_pass_layer));
 
     let mesh = Mesh::from(Rectangle::new(16.0 * 1.5, 9.0 * 1.5));
-    // let material = StandardMaterial {
-    //     base_color_texture: Some(image_handle),
-    //     unlit: true,
-    //     ..default()
-    // };
 
     // Display the pixelated image we generated with the first camera
     // it is likely that not only the size, but the approach used here
@@ -125,12 +123,12 @@ fn configure_pixelated_camera(
 ) {
     for (entity, mut camera) in &mut cameras {
         camera.order = -1;
-        camera.target = RenderTarget::Image(ImageRenderTarget {
-            handle: image.0.clone(),
-            scale_factor: bevy::math::FloatOrd(1.0),
-        });
-        commands
-            .entity(entity)
-            .insert(pixelated_pass_layer.0.clone());
+        commands.entity(entity).insert((
+            pixelated_pass_layer.0.clone(),
+            RenderTarget::Image(ImageRenderTarget {
+                handle: image.0.clone(),
+                scale_factor: 1.0,
+            }),
+        ));
     }
 }

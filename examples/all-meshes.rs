@@ -53,13 +53,6 @@ fn setup(
     pixelated_pass_layer: Res<PixelatedPassLayer>,
     mut pixelated: ResMut<Assets<ExtendedMaterial<StandardMaterial, PixelatedExtension>>>,
 ) {
-    // let debug_material = materials.add(StandardMaterial {
-    //     base_color_texture: Some(
-    //         images.add(uv_debug_texture()),
-    //     ),
-    //     ..default()
-    // });
-
     let debug_material = pixelated.add(ExtendedMaterial {
         base: StandardMaterial {
             // base_color: colors::RED,

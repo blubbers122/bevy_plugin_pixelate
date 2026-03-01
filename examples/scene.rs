@@ -326,10 +326,10 @@ fn setup_scene(
             });
     }
 
-    commands.insert_resource(AmbientLight {
+    commands.spawn(AmbientLight {
         color: Color::WHITE,
         brightness: 0.2,
-        affects_lightmapped_meshes: true, //??
+        affects_lightmapped_meshes: true,
     });
     commands.spawn((
         DirectionalLight {

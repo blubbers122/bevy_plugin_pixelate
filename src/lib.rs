@@ -17,4 +17,12 @@ impl MaterialExtension for PixelatedExtension {
     fn fragment_shader() -> ShaderRef {
         "pixelated.wgsl".into()
     }
+
+    fn enable_prepass() -> bool {
+        true
+    }
+
+    fn enable_shadows() -> bool {
+        true
+    }
 }
