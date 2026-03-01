@@ -68,13 +68,12 @@ fn setup(
         extension: PixelatedExtension { quantize_steps: 5 },
     });
     let shapes = [
-        meshes.add(shape::Cube::default()),
-        meshes.add(shape::Box::default()),
-        meshes.add(shape::Capsule::default()),
-        meshes.add(shape::Torus::default()),
-        meshes.add(shape::Cylinder::default()),
-        // meshes.add(shape::::default()),
-        meshes.add(shape::UVSphere::default()),
+        meshes.add(Cuboid::default()),
+        meshes.add(Cuboid::default()),
+        meshes.add(Capsule3d::default()),
+        meshes.add(Torus::default()),
+        meshes.add(Cylinder::default()),
+        meshes.add(Sphere::default()),
     ];
 
     let num_shapes = shapes.len();
@@ -93,7 +92,7 @@ fn setup(
                 ..default()
             },
             Shape,
-            pixelated_pass_layer.0,
+            pixelated_pass_layer.0.clone(),
         ));
     }
 
@@ -108,13 +107,16 @@ fn setup(
             transform: Transform::from_xyz(8.0, 16.0, 8.0),
             ..default()
         },
-        RenderLayers::all(),
+        RenderLayers::from_layers(&[0, 1]),
     ));
 
     // ground plane
     commands.spawn((
         MaterialMeshBundle {
-            mesh: meshes.add(shape::Plane::from_size(50.0)),
+            mesh: meshes.add(Plane3d {
+                half_size: Vec2::new(50.0, 50.0),
+                ..default()
+            }),
             material: pixelated.add(ExtendedMaterial {
                 base: StandardMaterial {
                     base_color: colors::BASE,
@@ -125,7 +127,7 @@ fn setup(
             }),
             ..default()
         },
-        pixelated_pass_layer.0,
+        pixelated_pass_layer.0.clone(),
     ));
 
     commands.spawn((
@@ -144,7 +146,7 @@ fn setup(
                 .looking_at(Vec3::new(0., 1., 0.), Vec3::Y),
             tonemapping: bevy::core_pipeline::tonemapping::Tonemapping::TonyMcMapface,
             color_grading: ColorGrading {
-                post_saturation: 1.2,
+                // post_saturation: 1.2,
                 ..default()
             },
             ..default()

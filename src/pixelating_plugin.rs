@@ -1,15 +1,11 @@
 use crate::PixelatedExtension;
 use bevy::{
-    pbr::{
-        ExtendedMaterial, NotShadowCaster,
-        NotShadowReceiver,
-    },
+    pbr::{ExtendedMaterial, NotShadowCaster, NotShadowReceiver},
     prelude::*,
     render::{
         camera::RenderTarget,
         render_resource::{
-            Extent3d, TextureDescriptor, TextureDimension,
-            TextureFormat, TextureUsages,
+            Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
         },
         texture::ImageSampler,
         view::RenderLayers,
@@ -25,15 +21,12 @@ pub struct PixelatingPlugin;
 
 impl Plugin for PixelatingPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(MaterialPlugin::<
-            ExtendedMaterial<
-                StandardMaterial,
-                PixelatedExtension,
-            >,
-        > {
-            prepass_enabled: true,
-            ..default()
-        })
+        app.add_plugins(
+            MaterialPlugin::<ExtendedMaterial<StandardMaterial, PixelatedExtension>> {
+                prepass_enabled: true,
+                ..default()
+            },
+        )
         .add_systems(Startup, setup)
         .add_systems(Update, configure_pixelated_camera);
     }
@@ -43,7 +36,7 @@ impl Plugin for PixelatingPlugin {
 #[derive(Resource)]
 struct FirstPassImage(Handle<Image>);
 
-#[derive(Resource, Deref)]
+#[derive(Resource, Deref, Clone)]
 pub struct PixelatedPassLayer(pub RenderLayers);
 
 // Marks the main pass cube, to which the texture is applied.
@@ -84,15 +77,11 @@ fn setup(
     image.resize(size);
 
     let image_handle = images.add(image);
-    commands.insert_resource(FirstPassImage(
-        image_handle.clone(),
-    ));
+    commands.insert_resource(FirstPassImage(image_handle.clone()));
 
     // This specifies the layer used for the first pass, which will be attached to the first pass camera and cube.
     let pixelated_pass_layer = RenderLayers::layer(1);
-    commands.insert_resource(PixelatedPassLayer(
-        pixelated_pass_layer,
-    ));
+    commands.insert_resource(PixelatedPassLayer(pixelated_pass_layer));
 
     // Display the pixelated image we generated with the first camera
     // it is likely that not only the size, but the approach used here
@@ -100,9 +89,7 @@ fn setup(
     // ex: doesn't really need to be a PbrBundle.
     commands.spawn((
         PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Quad::new(
-                Vec2::new(16., 9.) * 1.5,
-            ))),
+            mesh: meshes.add(Mesh::from(Rectangle::new(16.0 * 1.5, 9.0 * 1.5))),
             material: materials.add(StandardMaterial {
                 base_color_texture: Some(image_handle),
                 unlit: true,
@@ -114,12 +101,12 @@ fn setup(
         NotShadowCaster,
         NotShadowReceiver,
         MainPassDisplay,
+        RenderLayers::layer(0),
     ));
 
     // The main pass camera.
     commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 0.0, 15.0)
-            .looking_at(Vec3::ZERO, Vec3::Y),
+        transform: Transform::from_xyz(0.0, 0.0, 15.0).looking_at(Vec3::ZERO, Vec3::Y),
         tonemapping: bevy::core_pipeline::tonemapping::Tonemapping::TonyMcMapface,
         ..default()
     });
@@ -129,19 +116,15 @@ fn setup(
 // into the camera that renders to the pixelated texture
 fn configure_pixelated_camera(
     mut commands: Commands,
-    mut cameras: Query<
-        (Entity, &mut Camera),
-        Added<PixelatedCamera>,
-    >,
+    mut cameras: Query<(Entity, &mut Camera), Added<PixelatedCamera>>,
     image: Res<FirstPassImage>,
     pixelated_pass_layer: Res<PixelatedPassLayer>,
 ) {
     for (entity, mut camera) in &mut cameras {
         camera.order = -1;
-        camera.target =
-            RenderTarget::Image(image.0.clone());
+        camera.target = RenderTarget::Image(image.0.clone());
         commands
             .entity(entity)
-            .insert(pixelated_pass_layer.0);
+            .insert(pixelated_pass_layer.0.clone());
     }
 }

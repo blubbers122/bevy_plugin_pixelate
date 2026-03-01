@@ -10,7 +10,7 @@ use bevy_asset_loader::{
     loading_state::{config::ConfigureLoadingState, LoadingState, LoadingStateAppExt},
 };
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
-use bevy_scene_hook::{HookPlugin, HookedSceneBundle, SceneHook};
+// use bevy_scene_hook::{HookPlugin, HookedSceneBundle, SceneHook};
 use gen_04_pixels::{
     colors,
     pixelating_plugin::{PixelatedCamera, PixelatedPassLayer, PixelatingPlugin},
@@ -24,12 +24,17 @@ fn main() {
         .add_plugins((
             DefaultPlugins.set(ImagePlugin::default_nearest()),
             WorldInspectorPlugin::new(),
-            HookPlugin,
+            // HookPlugin,
         ))
         .add_plugins(PixelatingPlugin)
         .add_systems(
             Update,
-            (circle_rotator_system, light_rotator_system, rotator_system),
+            (
+                circle_rotator_system,
+                light_rotator_system,
+                rotator_system,
+                apply_scene_hooks,
+            ),
         )
         .insert_resource(Msaa::Off)
         .init_state::<MyStates>()
@@ -77,7 +82,7 @@ fn setup_camera(mut commands: Commands) {
                 .looking_at(Vec3::new(0., 4., 0.), Vec3::Y),
             tonemapping: bevy::core_pipeline::tonemapping::Tonemapping::TonyMcMapface,
             color_grading: ColorGrading {
-                post_saturation: 1.8,
+                // post_saturation: 1.8,
                 ..default()
             },
             projection: Projection::Orthographic(OrthographicProjection {
@@ -106,19 +111,16 @@ fn setup_camera(mut commands: Commands) {
 fn setup_scene(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    materials: Res<Assets<StandardMaterial>>,
     mut pixelated: ResMut<Assets<ExtendedMaterial<StandardMaterial, PixelatedExtension>>>,
-    asset_server: Res<AssetServer>,
     pixelated_pass_layer: Res<PixelatedPassLayer>,
-    nodes: Res<Assets<GltfNode>>,
     cars: Res<CarAssets>,
 ) {
     commands.spawn((
         MaterialMeshBundle {
             mesh: meshes.add(
-                Mesh::try_from(shape::Plane {
-                    size: 30.,
-                    subdivisions: 1,
+                Mesh::try_from(Plane3d {
+                    half_size: Vec2::new(30., 30.),
+                    ..default()
                 })
                 .unwrap(),
             ),
@@ -134,12 +136,12 @@ fn setup_scene(
             }),
             ..default()
         },
-        pixelated_pass_layer.0,
+        pixelated_pass_layer.0.clone(),
     ));
     // cubes
     commands.spawn((
         MaterialMeshBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+            mesh: meshes.add(Mesh::from(Cuboid::default())),
             transform: Transform::from_xyz(6.0, 4., -20.0),
             material: pixelated.add(ExtendedMaterial {
                 base: StandardMaterial {
@@ -152,7 +154,7 @@ fn setup_scene(
             ..default()
         },
         Rotate,
-        pixelated_pass_layer.0,
+        pixelated_pass_layer.0.clone(),
     ));
     // commands.spawn((SceneBundle {
     //     scene: cars.taxi_scene.clone(),
@@ -162,57 +164,36 @@ fn setup_scene(
     //     )),
     //     ..default()
     // }, pixelated_pass_layer.0));
-    let layer = pixelated_pass_layer.0.clone();
 
     commands.spawn((
-        HookedSceneBundle {
-            scene: SceneBundle {
-                scene: cars.taxi_scene.clone(),
-                transform: Transform::from_xyz(0., 0., 0.)
-                    .with_rotation(Quat::from_rotation_y(-FRAC_PI_4)),
-                ..default()
-            },
-            hook: SceneHook::new(move |entity, cmds| {
-                // only operate on entities with a `Handle<StandardMaterial>`.
-                let Some(_) = entity.get::<Handle<StandardMaterial>>() else {
-                    return;
-                };
-                cmds.insert(layer);
-                // cmds.insert();
-                // materials;
-                // let std_material = mats.get(mat).expect("we should already have checked to see if there is a standardmaterial on this entity");
-                // mats;
-
-                // match entity.get::<Name>().map(|t|t.as_str()) {
-                //     // Some("Pile") => cmds.insert(Pile(PileType::Drawing)),
-                //     // Some("Card") => cmds.insert(Card),
-                //     name => {
-                //         dbg!(name);
-
-                //         cmds
-                //     }
-                // };
-            }),
+        SceneBundle {
+            scene: cars.taxi_scene.clone(),
+            transform: Transform::from_xyz(0., 0., 0.)
+                .with_rotation(Quat::from_rotation_y(-FRAC_PI_4)),
+            ..default()
         },
+        pixelated_pass_layer.0.clone(),
         CircleRotate,
     ));
-    // let taxi: Handle<GltfNode> = asset_server.load("car-kit/taxi.glb#Node0");
-    // let taxi = nodes.get(&cars.taxi).expect("a taxi");
-    // dbg!(&taxi);
-    // commands.spawn(MaterialMeshBundle {
-    //     mesh: asset_server.load("car-kit/taxi.glb#Mesh1"),
-    //     transform: Transform::from_xyz(0.,0.,0.,)
-    //         .with_rotation(Quat::from_rotation_y(
-    //             FRAC_PI_4,
-    //     )),
-    //     material: materials.add( StandardMaterial {
-    //             base_color: colors::RED,
-    //             perceptual_roughness: 1.0,
-    //             ..Default::default()
+
+    // commands.spawn((
+    //     HookedSceneBundle {
+    //         scene: SceneBundle {
+    //             scene: cars.taxi_scene.clone(),
+    //             transform: Transform::from_xyz(0., 0., 0.)
+    //                 .with_rotation(Quat::from_rotation_y(-FRAC_PI_4)),
+    //             ..default()
     //         },
-    //     ),
-    //     ..default()
-    // });
+    //         hook: SceneHook::new(move |entity, cmds| {
+    //             // only operate on entities with a `Handle<StandardMaterial>`.
+    //             let Some(_) = entity.get::<Handle<StandardMaterial>>() else {
+    //                 return;
+    //             };
+    //             cmds.insert(layer);
+    //         }),
+    //     },
+    //     CircleRotate,
+    // ));
 }
 
 fn setup_lights(
@@ -225,19 +206,12 @@ fn setup_lights(
     // NOTE: Currently lights are shared between passes - see https://github.com/bevyengine/bevy/issues/3462
     for i in 0..10 {
         let transform = Transform::from_xyz(i as f32 * 10.0, 4.0, (i as f32 * 3.) - 15.);
-        let light_color = Color::Lcha {
-            lightness: 1.,
-            chroma: 1.,
-            hue: 360. / 10. * i as f32,
-            alpha: 1.,
-        };
+        let light_color = Color::Lcha(bevy::color::Lcha::new(1., 1., 360. / 10. * i as f32, 1.));
         commands
             .spawn((
                 PointLightBundle {
                     transform,
                     point_light: PointLight {
-                        // intensity: (),
-                        // range: (),
                         intensity: 400000.,
                         color: light_color,
                         shadows_enabled: true,
@@ -245,18 +219,15 @@ fn setup_lights(
                     },
                     ..default()
                 },
-                RenderLayers::all(),
+                RenderLayers::from_layers(&[0, 1]),
             ))
             .with_children(|parent| {
                 parent.spawn((
                     MaterialMeshBundle {
-                        mesh: meshes.add(
-                            Mesh::try_from(shape::UVSphere {
-                                radius: 0.5,
-                                ..default()
-                            })
-                            .unwrap(),
-                        ),
+                        mesh: meshes.add(Sphere {
+                            radius: 0.5,
+                            ..default()
+                        }),
 
                         material: materials.add(StandardMaterial {
                             base_color: light_color,
@@ -267,7 +238,7 @@ fn setup_lights(
                     },
                     NotShadowCaster,
                     NotShadowReceiver,
-                    pixelated_pass_layer.0,
+                    pixelated_pass_layer.0.clone(),
                 ));
             });
     }
@@ -276,26 +247,35 @@ fn setup_lights(
         color: Color::WHITE,
         brightness: 0.2,
     });
-    commands.spawn(DirectionalLightBundle {
-        directional_light: DirectionalLight {
-            illuminance: 10000.,
-            shadows_enabled: true,
+    commands.spawn((
+        DirectionalLightBundle {
+            directional_light: DirectionalLight {
+                illuminance: 10000.,
+                shadows_enabled: true,
+                ..default()
+            },
+            transform: Transform {
+                translation: Vec3::new(0.0, 20.0, 0.0),
+                rotation: Quat::from_rotation_x(-PI / 4.) + Quat::from_rotation_z(-PI),
+                ..default()
+            },
             ..default()
         },
-        transform: Transform {
-            translation: Vec3::new(0.0, 20.0, 0.0),
-            rotation: Quat::from_rotation_x(-PI / 4.) + Quat::from_rotation_z(-PI),
-            ..default()
-        },
-        // The default cascade config is designed to handle large scenes.
-        // As this example has a much smaller world, we can tighten the shadow
-        // bounds for better visual quality.
-        // cascade_shadow_config: CascadeShadowConfigBuilder {
-        //     first_cascade_far_bound: 4.0,
-        //     maximum_distance: 1000.0,
-        //     ..default()
-        // }
-        // .into(),
-        ..default()
-    });
+        RenderLayers::from_layers(&[0, 1]),
+    ));
+}
+
+fn apply_scene_hooks(
+    mut commands: Commands,
+    query: Query<(Entity, Option<&Name>), (With<Handle<Mesh>>, Without<RenderLayers>)>,
+    pixelated_pass_layer: Res<PixelatedPassLayer>,
+) {
+    for (entity, name) in query.iter() {
+        if let Some(name) = name {
+            info!("Pixelating: {}", name);
+        }
+        commands
+            .entity(entity)
+            .insert(pixelated_pass_layer.0.clone());
+    }
 }

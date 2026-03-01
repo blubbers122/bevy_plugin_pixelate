@@ -2,7 +2,7 @@ use bevy::{
     core_pipeline::prepass::{DepthPrepass, NormalPrepass},
     pbr::{ExtendedMaterial, NotShadowCaster, NotShadowReceiver, OpaqueRendererMethod},
     prelude::*,
-    render::view::{ColorGrading, RenderLayers},
+    render::view::RenderLayers,
 };
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use gen_04_pixels::{
@@ -43,17 +43,8 @@ fn setup_camera(mut commands: Commands) {
             transform: Transform::from_translation(Vec3::new(0.0, 10.0, 15.0))
                 .looking_at(Vec3::new(0., 4., 0.), Vec3::Y),
             tonemapping: bevy::core_pipeline::tonemapping::Tonemapping::TonyMcMapface,
-            color_grading: ColorGrading {
-                post_saturation: 1.8,
-                ..default()
-            },
             projection: Projection::Orthographic(OrthographicProjection {
-                // near: todo!(),
-                // far: todo!(),
-                // viewport_origin: todo!(),
-                // scaling_mode: todo!(),
                 scale: 0.1,
-                // area: todo!()
                 ..default()
             }),
             ..default()
@@ -81,7 +72,7 @@ fn setup_scene(
     // cubes
     commands.spawn((
         MaterialMeshBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+            mesh: meshes.add(Cuboid::from_size(Vec3::splat(1.0))),
             transform: Transform::from_xyz(6.0, 4., -20.0),
             material: pixelated.add(ExtendedMaterial {
                 base: StandardMaterial {
@@ -101,11 +92,11 @@ fn setup_scene(
             ..default()
         },
         Rotate,
-        pixelated_pass_layer.0,
+        pixelated_pass_layer.0.clone(),
     ));
     commands.spawn((
         MaterialMeshBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube { size: 2.0 })),
+            mesh: meshes.add(Cuboid::from_size(Vec3::splat(2.0))),
             transform: Transform::from_xyz(0.0, 0., 0.0),
             material: pixelated.add(ExtendedMaterial {
                 base: StandardMaterial {
@@ -125,17 +116,15 @@ fn setup_scene(
             ..default()
         },
         Rotate,
-        pixelated_pass_layer.0,
+        pixelated_pass_layer.0.clone(),
     ));
     commands.spawn((
         MaterialMeshBundle {
-            mesh: meshes.add(Mesh::from(shape::Torus {
-                radius: 4.,
-                ring_radius: 2.,
-                // subdivisions_segments: todo!(),
-                // subdivisions_sides: todo!(),
+            mesh: meshes.add(Torus {
+                major_radius: 4.,
+                minor_radius: 2.,
                 ..default()
-            })),
+            }),
             transform: Transform::from_xyz(0.0, 0., 0.0),
             material: pixelated.add(ExtendedMaterial {
                 base: StandardMaterial {
@@ -155,15 +144,15 @@ fn setup_scene(
             ..default()
         },
         Rotate,
-        pixelated_pass_layer.0,
+        pixelated_pass_layer.0.clone(),
     ));
     commands.spawn((
         MaterialMeshBundle {
-            mesh: meshes.add(Mesh::from(shape::Cylinder {
+            mesh: meshes.add(Cylinder {
                 radius: 2.,
-                height: 4.,
+                half_height: 2.,
                 ..default()
-            })),
+            }),
             transform: Transform::from_xyz(-15.0, 2., 0.0),
             material: pixelated.add(ExtendedMaterial {
                 base: StandardMaterial {
@@ -176,7 +165,7 @@ fn setup_scene(
                     // Note: to run in deferred mode, you must also add a `DeferredPrepass` component to the camera and either
                     // change the above to `OpaqueRendererMethod::Deferred` or add the `DefaultOpaqueRendererMethod` resource.
                     perceptual_roughness: 1.0,
-                    emissive: colors::SAPPHIRE,
+                    emissive: colors::SAPPHIRE.into(),
                     ..Default::default()
                 },
                 extension: PixelatedExtension { quantize_steps: 15 },
@@ -184,11 +173,11 @@ fn setup_scene(
             ..default()
         },
         // Rotate,
-        pixelated_pass_layer.0,
+        pixelated_pass_layer.0.clone(),
     ));
     commands.spawn((
         MaterialMeshBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube { size: 2.0 })),
+            mesh: meshes.add(Cuboid::from_size(Vec3::splat(2.0))),
             transform: Transform::from_xyz(5.0, 4., -5.0),
             material: pixelated.add(ExtendedMaterial {
                 base: StandardMaterial {
@@ -208,13 +197,13 @@ fn setup_scene(
             ..default()
         },
         Rotate,
-        pixelated_pass_layer.0,
+        pixelated_pass_layer.0.clone(),
     ));
 
     for i in 0..10 {
         commands.spawn((
             MaterialMeshBundle {
-                mesh: meshes.add(Mesh::from(shape::Cube { size: 2.0 })),
+                mesh: meshes.add(Cuboid::from_size(Vec3::splat(2.0))),
                 transform: Transform::from_xyz(-8.0, 2. * i as f32 + 0.5, -4.0)
                     .with_rotation(Quat::from_rotation_y(i as f32 * FRAC_PI_8)),
                 material: pixelated.add(ExtendedMaterial {
@@ -235,15 +224,15 @@ fn setup_scene(
                 ..default()
             },
             // Rotate,
-            pixelated_pass_layer.0,
+            pixelated_pass_layer.0.clone(),
         ));
     }
     commands.spawn((
         MaterialMeshBundle {
-            mesh: meshes.add(Mesh::from(shape::UVSphere {
+            mesh: meshes.add(Sphere {
                 radius: 1.,
                 ..default()
-            })),
+            }),
             transform: Transform::from_xyz(6.0, 4., 0.0),
             material: pixelated.add(ExtendedMaterial {
                 base: StandardMaterial {
@@ -263,18 +252,12 @@ fn setup_scene(
             ..default()
         },
         Rotate,
-        pixelated_pass_layer.0,
+        pixelated_pass_layer.0.clone(),
     ));
 
     commands.spawn((
         MaterialMeshBundle {
-            mesh: meshes.add(
-                Mesh::try_from(shape::Plane {
-                    size: 30.,
-                    subdivisions: 1,
-                })
-                .unwrap(),
-            ),
+            mesh: meshes.add(Plane3d::default().mesh().size(30., 30.).build()),
             transform: Transform::from_xyz(0.0, 0.0, 0.0)
                 .with_rotation(Quat::from_rotation_y(FRAC_PI_4)),
             material: pixelated.add(ExtendedMaterial {
@@ -308,7 +291,7 @@ fn setup_scene(
             ..default()
         },
         // ShadowR
-        pixelated_pass_layer.0,
+        pixelated_pass_layer.0.clone(),
     ));
 
     let parallax_material = pixelated.add(ExtendedMaterial {
@@ -336,14 +319,14 @@ fn setup_scene(
             mesh: meshes.add(
                 // NOTE: for normal maps and depth maps to work, the mesh
                 // needs tangents generated.
-                Mesh::from(shape::Cube { size: 4.0 })
+                Mesh::from(Cuboid::from_size(Vec3::splat(4.0)))
                     .with_generated_tangents()
                     .unwrap(),
             ),
             material: parallax_material.clone(),
             ..default()
         },
-        pixelated_pass_layer.0,
+        pixelated_pass_layer.0.clone(),
         Rotate,
     ));
 
@@ -351,12 +334,7 @@ fn setup_scene(
     // NOTE: Currently lights are shared between passes - see https://github.com/bevyengine/bevy/issues/3462
     for i in 0..10 {
         let transform = Transform::from_xyz(i as f32 * 10.0, 4.0, (i as f32 * 3.) - 15.);
-        let light_color = Color::Lcha {
-            lightness: 1.,
-            chroma: 1.,
-            hue: 360. / 10. * i as f32,
-            alpha: 1.,
-        };
+        let light_color = Color::Lcha(bevy::color::Lcha::new(1., 1., 360. / 10. * i as f32, 1.));
         commands
             .spawn((
                 PointLightBundle {
@@ -370,18 +348,15 @@ fn setup_scene(
                     },
                     ..default()
                 },
-                RenderLayers::all(),
+                RenderLayers::layer(0).with(1),
             ))
             .with_children(|parent| {
                 parent.spawn((
                     MaterialMeshBundle {
-                        mesh: meshes.add(
-                            Mesh::try_from(shape::UVSphere {
-                                radius: 0.5,
-                                ..default()
-                            })
-                            .unwrap(),
-                        ),
+                        mesh: meshes.add(Sphere {
+                            radius: 0.5,
+                            ..default()
+                        }),
 
                         material: materials.add(StandardMaterial {
                             base_color: light_color,
@@ -392,7 +367,7 @@ fn setup_scene(
                     },
                     NotShadowCaster,
                     NotShadowReceiver,
-                    pixelated_pass_layer.0,
+                    pixelated_pass_layer.0.clone(),
                 ));
             });
     }
