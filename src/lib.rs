@@ -15,7 +15,7 @@ pub struct PixelatedExtension {
 
 impl MaterialExtension for PixelatedExtension {
     fn fragment_shader() -> ShaderRef {
-        "pixelated.wgsl".into()
+        "embedded://bevy_plugin_pixelate/pixelated.wgsl".into()
     }
 
     fn enable_prepass() -> bool {

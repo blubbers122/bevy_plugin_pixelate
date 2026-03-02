@@ -7,7 +7,7 @@ use bevy::{
     render::view::Hdr,
 };
 use bevy_inspector_egui::{bevy_egui::EguiPlugin, quick::WorldInspectorPlugin};
-use gen_04_pixels::{
+use bevy_plugin_pixelate::{
     colors,
     pixelating_plugin::{PixelatedCamera, PixelatedPassLayer, PixelatingPlugin},
     rotators::{circle_rotator_system, light_rotator_system, rotator_system, Rotate},
@@ -52,7 +52,7 @@ fn setup_camera(mut commands: Commands) {
         NormalPrepass,
         // PixelatedCamera causes this camera to be used to generate the
         // pixelated scene
-        PixelatedCamera,
+        PixelatedCamera::default(),
         Msaa::Off,
     ));
 }

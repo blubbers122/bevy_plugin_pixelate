@@ -1,5 +1,5 @@
 [package]
-name = "gen-04-pixels"
+name = "bevy_plugin_pixelate"
 version = "0.1.0"
 edition = "2021"
 
